@@ -1,0 +1,151 @@
+{
+  "C:\\Users\\Admin\\OneDrive\\Documents\\Projects_GitHub\\task-management-app\\frontend\\task-management-ui\\serverless.yml": {
+    "versionFramework": "4.9.1",
+    "servicePath": "C:\\Users\\Admin\\OneDrive\\Documents\\Projects_GitHub\\task-management-app\\frontend\\task-management-ui\\serverless.yml",
+    "serviceConfigFileName": "serverless.yml",
+    "service": {
+      "service": "task-management-ui",
+      "provider": {
+        "name": "aws",
+        "runtime": "nodejs18.x",
+        "region": "us-east-1",
+        "stage": "dev",
+        "versionFunctions": true
+      },
+      "plugins": [
+        "serverless-finch"
+      ],
+      "custom": {
+        "client": {
+          "bucketName": "task-management-ui-2025-unique",
+          "distributionFolder": "dist",
+          "cloudFront": true
+        }
+      },
+      "resources": {
+        "Resources": {
+          "S3Bucket": {
+            "Type": "AWS::S3::Bucket",
+            "Properties": {
+              "BucketName": "task-management-ui",
+              "PublicAccessBlockConfiguration": {
+                "BlockPublicAcls": false,
+                "BlockPublicPolicy": false,
+                "IgnorePublicAcls": false,
+                "RestrictPublicBuckets": false
+              },
+              "WebsiteConfiguration": {
+                "IndexDocument": "index.html",
+                "ErrorDocument": "index.html"
+              }
+            }
+          },
+          "BucketPolicy": {
+            "Type": "AWS::S3::BucketPolicy",
+            "Properties": {
+              "Bucket": {
+                "Ref": "S3Bucket"
+              },
+              "PolicyDocument": {
+                "Statement": [
+                  {
+                    "Sid": "PublicRead",
+                    "Effect": "Allow",
+                    "Principal": "*",
+                    "Action": "s3:GetObject",
+                    "Resource": "arn:aws:s3:::task-management-ui/*"
+                  }
+                ]
+              }
+            }
+          },
+          "CloudFrontDistribution": {
+            "Type": "AWS::CloudFront::Distribution",
+            "Condition": "UseCloudFront",
+            "Properties": {
+              "DistributionConfig": {
+                "Enabled": true,
+                "DefaultRootObject": "index.html",
+                "Origins": [
+                  {
+                    "DomainName": {
+                      "Fn::GetAtt": [
+                        "S3Bucket",
+                        "DomainName"
+                      ]
+                    },
+                    "Id": "S3Origin",
+                    "S3OriginConfig": {
+                      "OriginAccessIdentity": ""
+                    }
+                  }
+                ],
+                "DefaultCacheBehavior": {
+                  "TargetOriginId": "S3Origin",
+                  "ViewerProtocolPolicy": "redirect-to-https",
+                  "AllowedMethods": [
+                    "GET",
+                    "HEAD"
+                  ],
+                  "CachedMethods": [
+                    "GET",
+                    "HEAD"
+                  ],
+                  "ForwardedValues": {
+                    "QueryString": false,
+                    "Cookies": {
+                      "Forward": "none"
+                    }
+                  }
+                },
+                "ViewerCertificate": {
+                  "CloudFrontDefaultCertificate": true
+                }
+              }
+            }
+          }
+        }
+      },
+      "conditions": {
+        "UseCloudFront": {
+          "Fn::Equals": [
+            true,
+            true
+          ]
+        }
+      }
+    },
+    "provider": {
+      "name": "aws",
+      "runtime": "nodejs18.x",
+      "region": "us-east-1",
+      "stage": "dev",
+      "versionFunctions": true
+    },
+    "dashboard": {
+      "isEnabledForService": false,
+      "requiredAuthentication": false,
+      "orgFeaturesInUse": null,
+      "orgObservabilityIntegrations": null,
+      "serviceAppId": null,
+      "serviceProvider": null,
+      "instanceParameters": null
+    },
+    "serviceRawFile": "service: task-management-ui\r\n\r\nprovider:\r\n  name: aws\r\n  runtime: nodejs18.x\r\n  region: us-east-1\r\n\r\nplugins:\r\n  - serverless-finch\r\n\r\ncustom:\r\n  client:\r\n    bucketName: task-management-ui-2025-unique\r\n    distributionFolder: dist\r\n    cloudFront: true # Enable CloudFront for better performance (optional)\r\n\r\nresources:\r\n  Resources:\r\n    S3Bucket:\r\n      Type: AWS::S3::Bucket\r\n      Properties:\r\n        BucketName: task-management-ui\r\n        PublicAccessBlockConfiguration:\r\n          BlockPublicAcls: false\r\n          BlockPublicPolicy: false\r\n          IgnorePublicAcls: false\r\n          RestrictPublicBuckets: false\r\n        WebsiteConfiguration:\r\n          IndexDocument: index.html\r\n          ErrorDocument: index.html\r\n\r\n    BucketPolicy:\r\n      Type: AWS::S3::BucketPolicy\r\n      Properties:\r\n        Bucket:\r\n          Ref: S3Bucket\r\n        PolicyDocument:\r\n          Statement:\r\n            - Sid: PublicRead\r\n              Effect: Allow\r\n              Principal: \"*\"\r\n              Action: s3:GetObject\r\n              Resource: arn:aws:s3:::task-management-ui/*\r\n  \r\n    CloudFrontDistribution:\r\n      Type: AWS::CloudFront::Distribution\r\n      Condition: UseCloudFront\r\n      Properties:\r\n        DistributionConfig:\r\n          Enabled: true\r\n          DefaultRootObject: index.html\r\n          Origins:\r\n            - DomainName: !GetAtt S3Bucket.DomainName\r\n              Id: S3Origin\r\n              S3OriginConfig:\r\n                OriginAccessIdentity: \"\"\r\n          DefaultCacheBehavior:\r\n            TargetOriginId: S3Origin\r\n            ViewerProtocolPolicy: redirect-to-https\r\n            AllowedMethods: [\"GET\", \"HEAD\"]\r\n            CachedMethods: [\"GET\", \"HEAD\"]\r\n            ForwardedValues:\r\n              QueryString: false\r\n              Cookies:\r\n                Forward: none\r\n          ViewerCertificate:\r\n            CloudFrontDefaultCertificate: true\r\n\r\nconditions:\r\n  UseCloudFront:\r\n    Fn::Equals:\r\n      - true\r\n      - true\r\n",
+    "command": [
+      "client",
+      "deploy"
+    ],
+    "options": {},
+    "orgId": "50e24b89-1b71-4968-9522-88462a24339f",
+    "orgName": "charlesmichaelramos",
+    "userId": "f5Dm7g0xX23XfLyqqD",
+    "userName": "charlesmichaelramos",
+    "serviceProviderAwsAccountId": "782483303647",
+    "serviceProviderAwsCfStackId": null,
+    "serviceProviderAwsCfStackCreated": null,
+    "serviceProviderAwsCfStackUpdated": null,
+    "serviceProviderAwsCfStackStatus": null,
+    "serviceProviderAwsCfStackOutputs": null
+  }
+}

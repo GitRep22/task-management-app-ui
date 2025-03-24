@@ -1,0 +1,73 @@
+service: task-management-ui
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-east-1
+
+plugins:
+  - serverless-finch
+
+custom:
+  client:
+    bucketName: task-management-ui-2025-unique
+    distributionFolder: dist
+    cloudFront: true # Enable CloudFront for better performance (optional)
+
+resources:
+  Resources:
+    S3Bucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: task-management-ui
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: false
+          BlockPublicPolicy: false
+          IgnorePublicAcls: false
+          RestrictPublicBuckets: false
+        WebsiteConfiguration:
+          IndexDocument: index.html
+          ErrorDocument: index.html
+
+    BucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket:
+          Ref: S3Bucket
+        PolicyDocument:
+          Statement:
+            - Sid: PublicRead
+              Effect: Allow
+              Principal: "*"
+              Action: s3:GetObject
+              Resource: arn:aws:s3:::task-management-ui/*
+  
+    CloudFrontDistribution:
+      Type: AWS::CloudFront::Distribution
+      Condition: UseCloudFront
+      Properties:
+        DistributionConfig:
+          Enabled: true
+          DefaultRootObject: index.html
+          Origins:
+            - DomainName: !GetAtt S3Bucket.DomainName
+              Id: S3Origin
+              S3OriginConfig:
+                OriginAccessIdentity: ""
+          DefaultCacheBehavior:
+            TargetOriginId: S3Origin
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods: ["GET", "HEAD"]
+            CachedMethods: ["GET", "HEAD"]
+            ForwardedValues:
+              QueryString: false
+              Cookies:
+                Forward: none
+          ViewerCertificate:
+            CloudFrontDefaultCertificate: true
+
+conditions:
+  UseCloudFront:
+    Fn::Equals:
+      - true
+      - true
